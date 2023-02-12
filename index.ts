@@ -11,11 +11,17 @@ const graphqlClient: typeof graphql = graphql.defaults({
   },
 });
 
+// 設定
 const OWNER = process.env.OWNER;
+const START_DATE = "2022-04-01";
+const repositories = [
+  // 好きなリポジトリ
+];
 
+// Query
 const searchQuery = (repo: string, endCursor?: string) => `
 {
-  search(type: ISSUE, query: "repo:${OWNER}/${repo} is:pr created:>=2022-04-01 base:develop", first: 100, ${
+  search(type: ISSUE, query: "repo:${OWNER}/${repo} is:pr created:>=${START_DATE} base:develop", first: 100, ${
   endCursor ? `after: "${endCursor}"` : ""
 }) {
     issueCount
@@ -46,7 +52,6 @@ const searchQuery = (repo: string, endCursor?: string) => `
     }
   }
 }
-
 `;
 
 async function search(repo: string, endCursor?: string) {
@@ -56,7 +61,7 @@ async function search(repo: string, endCursor?: string) {
     let endCursor;
     while (again) {
       const {
-        search: { issueCount: issueCount, nodes: page, pageInfo: pageInfo },
+        search: { issueCount: _issueCount, nodes: page, pageInfo: pageInfo },
       } = await graphqlClient(searchQuery(repo, endCursor));
       for (let item of page) {
         result.push({
@@ -98,10 +103,7 @@ async function search(repo: string, endCursor?: string) {
   });
 }
 
-const repositories = [
-  // 好きなリポジトリ
-];
-
+// 実行
 for (let repo of repositories) {
   search(repo);
 }
